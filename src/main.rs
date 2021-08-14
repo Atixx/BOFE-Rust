@@ -1,15 +1,25 @@
-use reqwest::blocking;
-
 fn main() {
-    // let _args: Vec<String> = env::args().collect();
+    use clap::{load_yaml, App};
 
-    let client = blocking::Client::new();
-    let res = client.post("http://httpbin.org/post")
-    .body("the exact body that is sent")
-    .send();
+    let yaml = load_yaml!("cli.yml");
+    let m = App::from(yaml).get_matches();
 
-    println!("{:?}", res);
+    if m.is_present("email") {
+        println!("Email was present")
+    }
+
+
+    // if let Some(mode) = m.value_of("mode") {
+
+    // match mode {
+    //         "vi" => println!("You are using vi"),
+    //         "emacs" => println!("You are using emacs..."),
+    //         _ => unreachable!(),
+    //     }
+    // } else {
+    //     println!("--mode <MODE> wasn't used...");
+    // }
 }
 
-// TODO: use soup crate https://docs.rs/soup/0.5.1/soup/ https://crates.io/crates/soup
-// for parsing
+// Use https://github.com/clap-rs/clap/blob/master/examples/17_yaml.yaml
+// for additional args handling

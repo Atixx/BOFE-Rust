@@ -1,0 +1,27 @@
+name: Boletin Fetcher
+version: "1.0"
+author: Maor L.
+about: Simple bot for integration with Argentina boletin oficial
+args:
+    - search_string:
+        short: s
+        long: search
+        about: Search string in quotes, defaults to "Policia Seguridad Aeroportuaria"
+        takes_value: true
+    - date:
+        short: d
+        about: Date to search in iso format, yyyy-mm-dd, defaults to today's date
+        takes_value: true
+    - verbose:
+        short: v
+    - email:
+        short: m
+        long: send-email
+        about: Email the results to the specified address, defaults to credentials
+    - address:
+        short: a
+        long: email-address
+        about: (Up to 3) Address(es) to send the email with the results, if exists, assumes -m flag
+        takes_value: true
+        multiple: true
+        max_values: 3
