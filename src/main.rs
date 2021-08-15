@@ -13,7 +13,7 @@ fn main() {
     let res = post_query();
 
     match res {
-        Ok(res) => println!("This worked with: {}", res),
+        Ok(_) => (),
         Err(e) => eprintln!("Error was: {}", e)
     }
 
