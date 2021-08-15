@@ -1,3 +1,5 @@
+use bofe::post_query;
+
 fn main() {
     use clap::{load_yaml, App};
 
@@ -8,6 +10,12 @@ fn main() {
         println!("Email was present")
     }
 
+    let res = post_query();
+
+    match res {
+        Ok(res) => println!("This worked with: {}", res),
+        Err(e) => eprintln!("Error was: {}", e)
+    }
 
     // if let Some(mode) = m.value_of("mode") {
 
