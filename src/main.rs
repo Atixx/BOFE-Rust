@@ -1,12 +1,11 @@
-use bofe::boletin;
+use bofe::{Config};
+use clap::{load_yaml, App};
 use chrono::Utc;
 
 // TODO:
 // Extract args to struct
 // function recieves args and handles behaviour
 fn main() {
-    use clap::{load_yaml, App};
-
     let yaml = load_yaml!("cli.yml");
     let m = App::from(yaml).get_matches();
     let search_string: &str;
@@ -22,24 +21,9 @@ fn main() {
         search_string = "Policia Seguridad Aeroportuaria";
     }
 
-    // TODO: Enable from-to dates
-    let res = boletin::fetch_articles(search_string, from_date, from_date);
-    // let res: Result<(), Box<dyn std::error::Error>> = Ok(());
+    let addresses = vec!["test@email.com"];
 
-    match res {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error was: {}", e)
-    }
+    let config = Config::new(addresses, m.is_present("email"), m.is_present("verbose"), search_string, from_date);
 
-    if m.is_present("email") {
-        // TODO:
-        // Send to default address
-        // send to input addresses
-        // println!("{}", build_query());
-        println!("Email was sent");
-    }
-
-    if m.is_present("verbose") {
-        println!("Articles found are: \n{}", "articles");
-    }
+    bofe::run(config);
 }

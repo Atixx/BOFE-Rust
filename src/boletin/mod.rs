@@ -73,6 +73,7 @@ pub fn fetch_articles(search_string: &str, from_date: &str, to_date: &str ) -> R
     let soup = Soup::new(&content.html);
     let articles = extract_articles(&soup);
 
+    // TODO: check error with no articles
     Ok(articles)
 }
 
