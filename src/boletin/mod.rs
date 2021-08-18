@@ -27,6 +27,21 @@ struct BoletinContent {
     cantidad_result_seccion: HashMap<u32, u32>,
 }
 
+impl Default for BoletinContent {
+    fn default() -> BoletinContent {
+        let mut cantidad_result_seccion = HashMap::new();
+        cantidad_result_seccion.insert(1, 1);
+
+        BoletinContent {
+            html: String::from(""),
+            sig_pag: 0,
+            ult_seccion: String::from(""),
+            ult_rubro: String::from(""),
+            cantidad_result_seccion
+        }
+    }
+}
+
 
 fn request_articles(query_info: &query::QueryInfo) -> Result<BoletinResponse, Box<dyn std::error::Error>> {
     let client = reqwest::blocking::Client::new();
@@ -67,13 +82,20 @@ pub fn fetch_articles(search_string: &str, from_date: &str, to_date: &str ) -> R
         to
     );
 
-    let body = request_articles(&query_info)?; // TODO: exit early if errors
-    let content = &body.content;
+    let body = request_articles(&query_info);
+
+    let content = match body {
+        Ok(body) => body.content,
+        Err(_) => { // Consider checking error type
+            BoletinContent {
+                ..Default::default()
+            }
+        }
+    };
 
     let soup = Soup::new(&content.html);
     let articles = extract_articles(&soup);
 
-    // TODO: check error with no articles
     Ok(articles)
 }
 

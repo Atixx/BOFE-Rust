@@ -1,5 +1,3 @@
-// optionally print content
-// send email with content
 mod boletin;
 mod articles;
 
@@ -47,6 +45,7 @@ pub fn run(config: Config) -> () {
     if config.stdout { print_articles(&articles) }
 }
 
+// TODO: Implement
 fn send_email(_addresses: &Vec<String>, _articles: &Vec<articles::Article>) {
     println!("Email was sent!");
 }
