@@ -1,26 +1,26 @@
-use chrono::{Date, Utc};
+use chrono::{NaiveDate, Utc};
 use serde::Serialize;
 
 
 #[derive(Debug)]
 pub struct QueryInfo {
     search_string: String,
-    from_date: Date<Utc>,
-    to_date: Date<Utc>
+    from_date: NaiveDate,
+    to_date: NaiveDate
 }
 
 impl Default for QueryInfo {
     fn default() -> QueryInfo {
         QueryInfo {
             search_string: String::from(""),
-            from_date: Utc::today(),
-            to_date: Utc::today(),
+            from_date: Utc::today().naive_utc(),
+            to_date: Utc::today().naive_utc(),
         }
     }
 }
 
 impl QueryInfo {
-    pub fn new(search_string: &str, from_date: Date<Utc>, to_date: Date<Utc>) -> QueryInfo {
+    pub fn new(search_string: &str, from_date: NaiveDate, to_date: NaiveDate) -> QueryInfo {
         QueryInfo {
             search_string: String::from(search_string),
             from_date,
@@ -64,11 +64,11 @@ pub struct BoletinQuery {
 }
 
 trait FormatDate {
-    fn format_date(date: Date<Utc>) -> String;
+    fn format_date(date: NaiveDate) -> String;
 }
 
 impl FormatDate for BoletinQuery {
-    fn format_date(date: Date<Utc>) -> String {
+    fn format_date(date: NaiveDate) -> String {
         date.format("%d/%m/%Y").to_string()
     }
 }
@@ -96,8 +96,8 @@ impl Default for BoletinQuery {
             tipo_contratacion: String::from(""),
             anio_contratacion: String::from(""),
             nro_contratacion: String::from(""),
-            fecha_desde: BoletinQuery::format_date(Utc::today()),
-            fecha_hasta: BoletinQuery::format_date(Utc::today()),
+            fecha_desde: BoletinQuery::format_date(Utc::today().naive_utc()),
+            fecha_hasta: BoletinQuery::format_date(Utc::today().naive_utc()),
             todas_las_palabras: true,
             comienza_denominacion: true,
             seccion: vec![1,2,3],
@@ -134,14 +134,14 @@ impl BoletinQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
+    use chrono::NaiveDate;
 
     #[test]
     fn builds_query_correctly() {
         let info = QueryInfo {
             search_string: String::from("Policia Seguridad Aeroportuaria"),
-            from_date: Utc.ymd(2021, 8, 3),
-            to_date: Utc.ymd(2021, 8, 5),
+            from_date: NaiveDate::from_ymd(2021, 8, 3),
+            to_date: NaiveDate::from_ymd(2021, 8, 5),
         };
 
         let query = BoletinQuery::new(&info);

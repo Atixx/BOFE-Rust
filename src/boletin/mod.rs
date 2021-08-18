@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT, CONTENT_TYPE, ACCEPT_ENCODING, ACCEPT, CONNECTION};
 use crate::articles::Article;
-use chrono::{Utc, TimeZone};
+use chrono::naive::NaiveDate;
 
 
 mod query;
@@ -28,8 +28,6 @@ struct BoletinContent {
 }
 
 
-// Refacator to:
-// send query
 fn request_articles(query_info: &query::QueryInfo) -> Result<BoletinResponse, Box<dyn std::error::Error>> {
     let client = reqwest::blocking::Client::new();
 
@@ -58,24 +56,24 @@ fn request_articles(query_info: &query::QueryInfo) -> Result<BoletinResponse, Bo
     Ok(body)
 }
 
-pub fn fetch_results() -> Result<(), Box<dyn std::error::Error>> {
+pub fn fetch_articles(search_string: &str, from_date: &str, to_date: &str ) -> Result<Vec<Article>, Box<dyn std::error::Error>> {
+
+    let from = NaiveDate::parse_from_str(&from_date, "%Y-%m-%d")?;
+    let to = NaiveDate::parse_from_str(&to_date, "%Y-%m-%d")?;
 
     let query_info = query::QueryInfo::new(
-        "Policia Seguridad Aeroportuaria",
-        Utc.ymd(2021, 8, 3),
-        Utc.ymd(2021, 8, 5)
+        &search_string,
+        from,
+        to
     );
+
     let body = request_articles(&query_info)?; // TODO: exit early if errors
     let content = &body.content;
 
     let soup = Soup::new(&content.html);
     let articles = extract_articles(&soup);
 
-    for a in articles {
-        println!("article: {}", a);
-    }
-
-    Ok(())
+    Ok(articles)
 }
 
 // TODO: Add tests and refactor is_link away
@@ -108,6 +106,3 @@ fn extract_articles(soup: &Soup) -> Vec<Article> {
 fn is_link(tag: &str) -> bool {
             tag == "a"
 }
-
-
-
