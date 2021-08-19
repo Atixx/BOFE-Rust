@@ -1,12 +1,11 @@
 use chrono::{NaiveDate, Utc};
 use serde::Serialize;
 
-
 #[derive(Debug)]
 pub struct QueryInfo {
     search_string: String,
     from_date: NaiveDate,
-    to_date: NaiveDate
+    to_date: NaiveDate,
 }
 
 impl Default for QueryInfo {
@@ -24,11 +23,10 @@ impl QueryInfo {
         QueryInfo {
             search_string: String::from(search_string),
             from_date,
-            to_date
+            to_date,
         }
     }
 }
-
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,7 +58,7 @@ pub struct BoletinQuery {
     seccion: Vec<u32>,
     tipo_busqueda: String,
     numero_pagina: u32,
-    ultimo_rubro: String
+    ultimo_rubro: String,
 }
 
 trait FormatDate {
@@ -85,7 +83,7 @@ impl Default for BoletinQuery {
             filtro_por_seccion_busqueda: false,
             busqueda_original: true,
             ordenamiento_segunda: false,
-            secciones_originales: vec![1,2,3],
+            secciones_originales: vec![1, 2, 3],
             ultimo_item_externo: None,
             ultimo_item_interno: None,
             texto: String::from(""),
@@ -100,10 +98,10 @@ impl Default for BoletinQuery {
             fecha_hasta: BoletinQuery::format_date(Utc::today().naive_utc()),
             todas_las_palabras: true,
             comienza_denominacion: true,
-            seccion: vec![1,2,3],
+            seccion: vec![1, 2, 3],
             tipo_busqueda: String::from("Avanzada"),
             numero_pagina: 1,
-            ultimo_rubro: String::from("")
+            ultimo_rubro: String::from(""),
         }
     }
 }
@@ -146,6 +144,9 @@ mod tests {
 
         let query = BoletinQuery::new(&info);
 
-        assert_eq!(query.build_query().unwrap(), r#"params={"busquedaRubro":false,"hayMasResultadosBusqueda":true,"ejecutandoLlamadaAsincronicaBusqueda":false,"ultimaSeccion":"","filtroPorRubrosSeccion":false,"filtroPorRubroBusqueda":false,"filtroPorSeccionBusqueda":false,"busquedaOriginal":true,"ordenamientoSegunda":false,"seccionesOriginales":[1,2,3],"ultimoItemExterno":null,"ultimoItemInterno":null,"texto":"Policia+Seguridad+Aeroportuaria","rubros":[],"nroNorma":"","anioNorma":"","denominacion":"","tipoContratacion":"","anioContratacion":"","nroContratacion":"","fechaDesde":"03/08/2021","fechaHasta":"05/08/2021","todasLasPalabras":true,"comienzaDenominacion":true,"seccion":[1,2,3],"tipoBusqueda":"Avanzada","numeroPagina":1,"ultimoRubro":""}&array_volver=[]"#)
+        assert_eq!(
+            query.build_query().unwrap(),
+            r#"params={"busquedaRubro":false,"hayMasResultadosBusqueda":true,"ejecutandoLlamadaAsincronicaBusqueda":false,"ultimaSeccion":"","filtroPorRubrosSeccion":false,"filtroPorRubroBusqueda":false,"filtroPorSeccionBusqueda":false,"busquedaOriginal":true,"ordenamientoSegunda":false,"seccionesOriginales":[1,2,3],"ultimoItemExterno":null,"ultimoItemInterno":null,"texto":"Policia+Seguridad+Aeroportuaria","rubros":[],"nroNorma":"","anioNorma":"","denominacion":"","tipoContratacion":"","anioContratacion":"","nroContratacion":"","fechaDesde":"03/08/2021","fechaHasta":"05/08/2021","todasLasPalabras":true,"comienzaDenominacion":true,"seccion":[1,2,3],"tipoBusqueda":"Avanzada","numeroPagina":1,"ultimoRubro":""}&array_volver=[]"#
+        )
     }
 }

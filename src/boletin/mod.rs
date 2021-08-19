@@ -1,10 +1,11 @@
-use soup::prelude::*;
-use serde::Deserialize;
-use std::collections::HashMap;
-use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT, CONTENT_TYPE, ACCEPT_ENCODING, ACCEPT, CONNECTION};
 use crate::articles::Article;
 use chrono::naive::NaiveDate;
-
+use reqwest::header::{
+    HeaderMap, HeaderValue, ACCEPT, ACCEPT_ENCODING, CONNECTION, CONTENT_TYPE, USER_AGENT,
+};
+use serde::Deserialize;
+use soup::prelude::*;
+use std::collections::HashMap;
 
 mod query;
 
@@ -15,7 +16,7 @@ const BASE_URL: &str = "https://www.boletinoficial.gob.ar";
 struct BoletinResponse {
     error: u32,
     content: BoletinContent,
-    mensajes: Vec<String>
+    mensajes: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -34,15 +35,18 @@ enum ResultsBySection {
     Empty(Vec<u32>),
 }
 
-
-fn request_articles(query_info: &query::QueryInfo) -> Result<BoletinResponse, Box<dyn std::error::Error>> {
+fn request_articles(
+    query_info: &query::QueryInfo,
+) -> Result<BoletinResponse, Box<dyn std::error::Error>> {
     let client = reqwest::blocking::Client::new();
-
 
     fn construct_headers() -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"));
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/x-www-form-urlencoded; charset=UTF-8"));
+        headers.insert(
+            CONTENT_TYPE,
+            HeaderValue::from_static("application/x-www-form-urlencoded; charset=UTF-8"),
+        );
         headers.insert(ACCEPT_ENCODING, HeaderValue::from_static("gzip, deflate"));
         headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
         headers.insert(CONNECTION, HeaderValue::from_static("keep-alive"));
@@ -52,11 +56,11 @@ fn request_articles(query_info: &query::QueryInfo) -> Result<BoletinResponse, Bo
 
     let query = query::BoletinQuery::new(query_info).build_query()?;
 
-    let res = client.post(POST_URL)
+    let res = client
+        .post(POST_URL)
         .headers(construct_headers())
         .body(query)
         .send()?;
-
 
     let body = res.json::<BoletinResponse>()?;
 
@@ -73,11 +77,7 @@ pub fn fetch_articles(
     let from = NaiveDate::parse_from_str(&from_date, "%Y-%m-%d")?;
     let to = NaiveDate::parse_from_str(&to_date, "%Y-%m-%d")?;
 
-    let query_info = query::QueryInfo::new(
-        &search_string,
-        from,
-        to
-    );
+    let query_info = query::QueryInfo::new(&search_string, from, to);
 
     let body = request_articles(&query_info).expect("Error parsing JSON response");
     let soup = Soup::new(&body.content.html);
@@ -90,7 +90,6 @@ fn extract_articles(soup: &Soup) -> Vec<Article> {
     let mut articles: Vec<Article> = vec![];
 
     for article in soup.tag("p").class("item").find_all() {
-
         let mut parents = article.parents();
         let mut link: String = String::from(BASE_URL);
 
@@ -107,7 +106,6 @@ fn extract_articles(soup: &Soup) -> Vec<Article> {
 
     articles
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -149,15 +147,21 @@ mod tests {
         let soup = soup_from_response(response);
 
         let title = String::from("PRESUPUESTO");
-        let link = String::from("https://www.boletinoficial.gob.ar/detalleAviso/primera/247706/20210805?busqueda=1");
+        let link = String::from(
+            "https://www.boletinoficial.gob.ar/detalleAviso/primera/247706/20210805?busqueda=1",
+        );
         let article_1 = Article { title, link };
 
         let title = String::from("POLICÍA DE SEGURIDAD AEROPORTUARIA");
-        let link = String::from("https://www.boletinoficial.gob.ar/detalleAviso/primera/247743/20210805?busqueda=1");
+        let link = String::from(
+            "https://www.boletinoficial.gob.ar/detalleAviso/primera/247743/20210805?busqueda=1",
+        );
         let article_2 = Article { title, link };
 
         let title = String::from("SUBSECRETARÍA DE INVESTIGACIÓN CRIMINAL Y COOPERACIÓN JUDICIAL");
-        let link = String::from("https://www.boletinoficial.gob.ar/detalleAviso/primera/247653/20210803?busqueda=1");
+        let link = String::from(
+            "https://www.boletinoficial.gob.ar/detalleAviso/primera/247653/20210803?busqueda=1",
+        );
         let article_3 = Article { title, link };
 
         let articles = vec![article_1, article_2, article_3];

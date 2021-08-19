@@ -11,4 +11,3 @@ impl fmt::Display for Article {
         write!(f, "Title: {}, URL: {}", self.title, self.link)
     }
 }
-

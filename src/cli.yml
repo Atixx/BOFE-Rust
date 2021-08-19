@@ -1,7 +1,7 @@
 name: Boletin Fetcher
-version: "1.0"
-author: Maor L.
-about: Simple bot for integration with Argentina boletin oficial
+version: "0.1"
+author: Atixx (ML)
+about: Basic integration with Argentina boletin oficial advanced query
 args:
     - search_string:
         short: s

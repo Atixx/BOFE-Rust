@@ -1,11 +1,16 @@
-use bofe::{Config};
-use clap::{load_yaml, App};
-use chrono::Utc;
+extern crate dotenv;
 
-// TODO:
-// Extract args to struct
-// function recieves args and handles behaviour
+use bofe::Config;
+use chrono::Utc;
+use clap::{load_yaml, App};
+use dotenv::dotenv;
+
+// High Level TODO:
+// get default address + override with argument address
+// need to handle address format in argument
+
 fn main() {
+    dotenv().ok();
     let yaml = load_yaml!("cli.yml");
     let m = App::from(yaml).get_matches();
     let search_string: &str;
@@ -21,9 +26,21 @@ fn main() {
         search_string = "Policia Seguridad Aeroportuaria";
     }
 
-    let addresses = vec!["test@email.com"];
+    // TODO: Figure out addresses
+    if m.is_present("address") {
+        println!("{}", m.value_of("address").unwrap())
+    };
 
-    let config = Config::new(addresses, m.is_present("email"), m.is_present("verbose"), search_string, from_date);
+    let addresses = vec!["Cargo Testing <peteg73374@ampswipe.com>"];
+    // let addresses = vec!["test@email.com", "another@address.com"];
+
+    let config = Config::new(
+        addresses,
+        m.is_present("email"),
+        m.is_present("verbose"),
+        search_string,
+        from_date,
+    );
 
     bofe::run(config);
 }
