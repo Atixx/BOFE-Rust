@@ -24,22 +24,14 @@ struct BoletinContent {
     sig_pag: u32,
     ult_seccion: String,
     ult_rubro: String,
-    cantidad_result_seccion: HashMap<u32, u32>,
+    cantidad_result_seccion: ResultsBySection,
 }
 
-impl Default for BoletinContent {
-    fn default() -> BoletinContent {
-        let mut cantidad_result_seccion = HashMap::new();
-        cantidad_result_seccion.insert(1, 1);
-
-        BoletinContent {
-            html: String::from(""),
-            sig_pag: 0,
-            ult_seccion: String::from(""),
-            ult_rubro: String::from(""),
-            cantidad_result_seccion
-        }
-    }
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum ResultsBySection {
+    ValueResponse(HashMap<String, u32>),
+    Empty(Vec<u32>),
 }
 
 
@@ -71,8 +63,13 @@ fn request_articles(query_info: &query::QueryInfo) -> Result<BoletinResponse, Bo
     Ok(body)
 }
 
-pub fn fetch_articles(search_string: &str, from_date: &str, to_date: &str ) -> Result<Vec<Article>, Box<dyn std::error::Error>> {
-
+/// Query and parse results of boletin oficial's to a list of articles
+/// pagination is not built in so it will return at most 100 results
+pub fn fetch_articles(
+    search_string: &str,
+    from_date: &str,
+    to_date: &str,
+) -> Result<Vec<Article>, Box<dyn std::error::Error>> {
     let from = NaiveDate::parse_from_str(&from_date, "%Y-%m-%d")?;
     let to = NaiveDate::parse_from_str(&to_date, "%Y-%m-%d")?;
 
@@ -82,40 +79,25 @@ pub fn fetch_articles(search_string: &str, from_date: &str, to_date: &str ) -> R
         to
     );
 
-    let body = request_articles(&query_info);
-
-    let content = match body {
-        Ok(body) => body.content,
-        Err(_) => { // Consider checking error type
-            BoletinContent {
-                ..Default::default()
-            }
-        }
-    };
-
-    let soup = Soup::new(&content.html);
+    let body = request_articles(&query_info).expect("Error parsing JSON response");
+    let soup = Soup::new(&body.content.html);
     let articles = extract_articles(&soup);
 
     Ok(articles)
 }
 
-// TODO: Add tests and refactor is_link away
 fn extract_articles(soup: &Soup) -> Vec<Article> {
     let mut articles: Vec<Article> = vec![];
 
     for article in soup.tag("p").class("item").find_all() {
 
         let mut parents = article.parents();
-        let anchor = parents.find(|tag| is_link(&tag.name().to_string() ));
         let mut link: String = String::from(BASE_URL);
 
-        // TODO: use unwrap
-        if let Some(a) = anchor {
-            let l = a.get("href");
-            if let Some(href) = l {
-                link.push_str(&href);
-            }
-        }
+        let a_tag = parents.find(|tag| tag.name().to_string() == "a");
+        let href = a_tag.unwrap().get("href").unwrap();
+
+        link.push_str(&href);
 
         let raw_title = String::from(&article.text());
         let title = raw_title.trim().replace('\u{a0}', " ");
@@ -126,6 +108,69 @@ fn extract_articles(soup: &Soup) -> Vec<Article> {
     articles
 }
 
-fn is_link(tag: &str) -> bool {
-            tag == "a"
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn response_from_mock(mock_name: &str) -> BoletinResponse {
+        let mut file_name = String::from("src/boletin/mocks/");
+        file_name.push_str(mock_name);
+        let raw = fs::read_to_string(file_name).expect("Unable to read file");
+        serde_json::from_str(&raw).expect("Unable to parse json file")
+    }
+
+    fn soup_from_response(boletin_response: BoletinResponse) -> Soup {
+        let content = &boletin_response.content.html;
+        Soup::new(content)
+    }
+
+    #[test]
+    fn extact_single_article() {
+        let title = String::from("Testing Title");
+        let link = String::from("https://www.boletinoficial.gob.ar/testing_title_link");
+        let article = Article { title, link };
+        let response = response_from_mock("single-result-response.json");
+        let soup = soup_from_response(response);
+        assert_eq!(extract_articles(&soup), vec![article]);
+    }
+
+    #[test]
+    fn extract_empty_string_on_empty_response() {
+        let response = response_from_mock("empty-response.json");
+        let soup = soup_from_response(response);
+        assert_eq!(extract_articles(&soup), vec![]);
+    }
+
+    #[test]
+    fn extract_multiple_articles_single_page() {
+        let response = response_from_mock("single-page-multi-result-response.json");
+        let soup = soup_from_response(response);
+
+        let title = String::from("PRESUPUESTO");
+        let link = String::from("https://www.boletinoficial.gob.ar/detalleAviso/primera/247706/20210805?busqueda=1");
+        let article_1 = Article { title, link };
+
+        let title = String::from("POLICÍA DE SEGURIDAD AEROPORTUARIA");
+        let link = String::from("https://www.boletinoficial.gob.ar/detalleAviso/primera/247743/20210805?busqueda=1");
+        let article_2 = Article { title, link };
+
+        let title = String::from("SUBSECRETARÍA DE INVESTIGACIÓN CRIMINAL Y COOPERACIÓN JUDICIAL");
+        let link = String::from("https://www.boletinoficial.gob.ar/detalleAviso/primera/247653/20210803?busqueda=1");
+        let article_3 = Article { title, link };
+
+        let articles = vec![article_1, article_2, article_3];
+        assert_eq!(extract_articles(&soup), articles);
+    }
+
+    #[test]
+    fn extract_first_page_multi_page() {
+        let response = response_from_mock("multi-page-multi-result-response.json");
+        let soup = soup_from_response(response);
+
+        let extracted = extract_articles(&soup);
+
+        assert_eq!(extracted.len(), 100);
+    }
 }
