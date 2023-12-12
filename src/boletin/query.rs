@@ -109,7 +109,7 @@ impl Default for BoletinQuery {
 impl BoletinQuery {
     pub fn new(info: &QueryInfo) -> BoletinQuery {
         BoletinQuery {
-            texto: info.search_string.replace(" ", "+"),
+            texto: info.search_string.replace(' ', "+"),
             fecha_desde: BoletinQuery::format_date(info.from_date),
             fecha_hasta: BoletinQuery::format_date(info.to_date),
             ..Default::default()

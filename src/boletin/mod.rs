@@ -74,10 +74,10 @@ pub fn fetch_articles(
     from_date: &str,
     to_date: &str,
 ) -> Result<Vec<Article>, Box<dyn std::error::Error>> {
-    let from = NaiveDate::parse_from_str(&from_date, "%Y-%m-%d")?;
-    let to = NaiveDate::parse_from_str(&to_date, "%Y-%m-%d")?;
+    let from = NaiveDate::parse_from_str(from_date, "%Y-%m-%d")?;
+    let to = NaiveDate::parse_from_str(to_date, "%Y-%m-%d")?;
 
-    let query_info = query::QueryInfo::new(&search_string, from, to);
+    let query_info = query::QueryInfo::new(search_string, from, to);
 
     let body = request_articles(&query_info).expect("Error parsing JSON response");
     let soup = Soup::new(&body.content.html);

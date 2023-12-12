@@ -8,23 +8,24 @@ use dotenv::dotenv;
 // High Level TODO:
 // get default address + override with argument address
 // need to handle address format in argument
-
+// Move all todos to readme
 fn main() {
     dotenv().ok();
     let yaml = load_yaml!("cli.yml");
     let m = App::from(yaml).get_matches();
-    let search_string: &str;
+    // let search_string: &str;
     let mut from_date: &str = &Utc::today().naive_utc().format("%Y-%m-%d").to_string();
 
     if m.is_present("date") {
         from_date = m.value_of("date").unwrap();
     }
 
-    if m.is_present("search_string") {
-        search_string = m.value_of("search_string").unwrap();
-    } else {
-        search_string = "Policia Seguridad Aeroportuaria";
-    }
+    let search_string =
+        if m.is_present("search_string") {
+            m.value_of("search_string").unwrap()
+        } else {
+            "Policia Seguridad Aeroportuaria"
+        };
 
     // TODO: Figure out addresses
     if m.is_present("address") {
